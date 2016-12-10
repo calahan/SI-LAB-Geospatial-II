@@ -1,0 +1,57 @@
+---
+title: "Geospatial R Part II"
+output: html_document
+---
+```{r Init, message=FALSE, results="hide"}
+library(rgdal)
+#library(rgeos)
+#library(maptools)
+library(ggplot2)
+#library(png)
+```
+#Demo I: Natural Earth Continent Data
+##Load and Inspect Continent Data
+```{r LoadContinentData, message=FALSE, results="hide"}
+cont.str <- "ne_110m_land"
+cont.df <- readOGR(cont.str, cont.str)
+```
+```{r InspectContinentData}
+str(cont.df, max.level=2)
+str(cont.df@data, max.level=1)
+cont.df@polygons[1]
+cont.df@plotOrder
+cont.df@bbox
+cont.df@proj4string
+```
+##Plot Continent Data
+```{r PlotContinentsLatLong}
+fcont.df <- fortify(cont.df)
+ggplot(fcont.df, aes(long, lat, group=group)) +
+    geom_polygon() +
+    coord_fixed()
+```
+##Transform and Plot Continent Data
+```{r PlotContinentsAugust}
+aug.proj <- CRS("+proj=august")
+aug.cont.df <- spTransform(cont.df, aug.proj)
+faug.cont.df <- fortify(aug.cont.df)
+ggplot(faug.cont.df, aes(long, lat, group=group)) +
+    geom_polygon() +
+    coord_fixed()
+```
+```{r PlotContinentsRobinson}
+rob.proj <- CRS("+proj=robin")
+rob.cont.df <- spTransform(cont.df, rob.proj)
+frob.cont.df <- fortify(rob.cont.df)
+ggplot(frob.cont.df, aes(long, lat, group=group)) +
+    geom_polygon() +
+    coord_fixed()
+```
+```{r Prettify}
+bbox.str <- "ne_110m_wgs84_bounding_box"
+cont.bbox <- readOGR(bbox.str, bbox.str)
+#spTransform(
+#readOGR(paste(cont.dir, bbox.data, sep = "/"), bbox.data), CRS(fig.CRS)))
+#fcont.df <<- fortify(spTransform(readOGR(paste(cont.dir, cont.data, sep = "/"), cont.data), CRS(fig.CRS)))
+#flake.df <<- fortify(spTransform(readOGR(paste(lake.dir, lake.data, sep = "/"), lake.data), CRS(fig.CRS)))
+```
