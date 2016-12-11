@@ -23,7 +23,7 @@ cont.df@plotOrder
 cont.df@bbox
 cont.df@proj4string
 ```
-##Plot Continent Data
+##Plot Continent Data As-is
 ```{r PlotContinentsLatLong}
 fcont.df <- fortify(cont.df)
 ggplot(fcont.df, aes(long, lat, group=group)) +
@@ -31,25 +31,24 @@ ggplot(fcont.df, aes(long, lat, group=group)) +
     coord_fixed()
 ```
 ##Transform and Plot Continent Data
-```{r PlotContinentsAugust}
-aug.proj <- CRS("+proj=august")
-aug.cont.df <- spTransform(cont.df, aug.proj)
-faug.cont.df <- fortify(aug.cont.df)
-ggplot(faug.cont.df, aes(long, lat, group=group)) +
-    geom_polygon() +
-    coord_fixed()
-```
 ```{r PlotContinentsRobinson}
 rob.proj <- CRS("+proj=robin")
 rob.cont.df <- spTransform(cont.df, rob.proj)
 frob.cont.df <- fortify(rob.cont.df)
-ggplot(frob.cont.df, aes(long, lat, group=group)) +
+cont.plot <- ggplot(frob.cont.df, aes(long, lat, group=group)) +
     geom_polygon() +
     coord_fixed()
+cont.plot
 ```
-```{r Prettify}
+```{r IncludeBBox}
 bbox.str <- "ne_110m_wgs84_bounding_box"
-cont.bbox <- readOGR(bbox.str, bbox.str)
+bbox.df <- readOGR(bbox.str, bbox.str)
+rob.bbox.df <- spTransform(bbox.df, rob.proj)
+frob.bbox.df <- fortify(rob.bbox.df)
+cont.plot <- ggplot(data=frob.bbox.df, aes(long, lat)) +
+    geom_polygon(fill="blue") +
+    geom_polygon(data=frob.cont.df, aes(long, lat, group=group), fill="black") 
+cont.plot
 #spTransform(
 #readOGR(paste(cont.dir, bbox.data, sep = "/"), bbox.data), CRS(fig.CRS)))
 #fcont.df <<- fortify(spTransform(readOGR(paste(cont.dir, cont.data, sep = "/"), cont.data), CRS(fig.CRS)))
