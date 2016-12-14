@@ -9,7 +9,7 @@ library(rgdal)
 library(ggplot2)
 #library(png)
 ```
-#Demo I: Natural Earth Continent Data
+#Natural Earth Continent Data
 ##Load and Inspect Continent Data
 ```{r LoadContinentData, message=FALSE, results="hide"}
 cont.str <- "ne_110m_land"
@@ -19,7 +19,6 @@ cont.df <- readOGR(cont.str, cont.str)
 str(cont.df, max.level=2)
 str(cont.df@data, max.level=1)
 cont.df@polygons[1]
-cont.df@plotOrder
 cont.df@bbox
 cont.df@proj4string
 ```
@@ -30,14 +29,16 @@ ggplot(fcont.df, aes(long, lat, group=group)) +
     geom_polygon() +
     coord_fixed()
 ```
+
 ##Transform and Plot Continent Data
 ```{r PlotContinentsRobinson}
 rob.proj <- CRS("+proj=robin")
 rob.cont.df <- spTransform(cont.df, rob.proj)
 frob.cont.df <- fortify(rob.cont.df)
+head(frob.cont.df)
 cont.plot <- ggplot(frob.cont.df, aes(long, lat, group=group)) +
-    geom_polygon() +
-    coord_fixed()
+    geom_polygon()
+#    coord_fixed()
 cont.plot
 ```
 ```{r IncludeBBox}
@@ -46,11 +47,43 @@ bbox.df <- readOGR(bbox.str, bbox.str)
 rob.bbox.df <- spTransform(bbox.df, rob.proj)
 frob.bbox.df <- fortify(rob.bbox.df)
 cont.plot <- ggplot(data=frob.bbox.df, aes(long, lat)) +
-    geom_polygon(fill="blue") +
+    geom_polygon(fill="turquoise1") +
     geom_polygon(data=frob.cont.df, aes(long, lat, group=group), fill="black") 
 cont.plot
+```
+
+##Plot Cleanup
+```{r PlotCleanup}
+lake.str <- "GRDC_lakes_join_rivers"
+flake.df <<- fortify(spTransform(readOGR(lake.str, lake.str), rob.proj))
+
+theme.opts <<- list(theme(axis.line = element_blank(),
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank(),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.background = element_blank(),
+      panel.border = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      plot.background = element_blank(),
+      plot.title = element_blank()
+))
+cont.plot <- ggplot(data=frob.bbox.df, aes(long, lat)) +
+    geom_polygon(fill="turquoise1") +
+    geom_polygon(data=frob.cont.df, aes(long, lat, group=group), fill="black") +
+    theme.opts
+cont.plot
+ggsave("contplot.png", plot=cont.plot, width=3.25, height=1.65, dpi=300)
+```
+
+![World Map 1](contplot.png)
+```{r Cleanup2}
 #spTransform(
 #readOGR(paste(cont.dir, bbox.data, sep = "/"), bbox.data), CRS(fig.CRS)))
 #fcont.df <<- fortify(spTransform(readOGR(paste(cont.dir, cont.data, sep = "/"), cont.data), CRS(fig.CRS)))
 #flake.df <<- fortify(spTransform(readOGR(paste(lake.dir, lake.data, sep = "/"), lake.data), CRS(fig.CRS)))
 ```
+#Resources
+http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
