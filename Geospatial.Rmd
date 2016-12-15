@@ -92,6 +92,8 @@ r.sums <- lapply(1:495, dosum.r)
 c.sums <- lapply(1:975, dosum.c)
 r.non.white <- which(r.sums != 3900)
 c.non.white <- which(c.sums != 1980)
+head(r.non.white)
+tail(r.non.white)
 clean.png.data <- png.data[min(r.non.white):max(r.non.white),min(c.non.white):max(c.non.white),1:4]
 writePNG(clean.png.data, "cleancontplot.png", dpi=300)
 ```
@@ -111,6 +113,13 @@ fbbox.spolys <- fortify(bbox.spolys)
 pcont.plot <- ggplot(fcont.df, aes(long, lat, group=group)) +
     geom_polygon() +
     geom_polygon(data=fbbox.spolys, aes(long, lat), color="red", fill=NA)
+pcont.plot
+
+frob.bbox.df <- fortify(spTransform(bbox.spolys, rob.proj))
+
+pcont.plot <- ggplot(frob.cont.df, aes(long, lat, group=group)) +
+    geom_polygon() +
+    geom_polygon(data=frob.bbox.df, aes(long, lat), color="red", fill=NA)
 pcont.plot
 
 subset <- gIntersection(cont.df, bbox.spolys)
