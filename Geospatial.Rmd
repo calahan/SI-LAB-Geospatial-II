@@ -8,7 +8,6 @@ library(rgeos)
 library(ggplot2)
 library(png)
 ```
-#Natural Earth Continent Data
 ##Load and Inspect Continent Data
 ```{r LoadContinentData, message=FALSE, results="hide"}
 cont.str <- "ne_110m_land"
@@ -24,6 +23,7 @@ cont.df@proj4string
 ##Plot Continent Data As-is
 ```{r PlotContinentsLatLong}
 fcont.df <- fortify(cont.df)
+head(fcont.df)
 ggplot(fcont.df, aes(long, lat, group=group)) +
     geom_polygon()
 ```
@@ -38,6 +38,8 @@ cont.plot <- ggplot(frob.cont.df, aes(long, lat, group=group)) +
     geom_polygon()
 cont.plot
 ```
+
+##Add Oceans
 ```{r IncludeBBox}
 bbox.str <- "ne_110m_wgs84_bounding_box"
 bbox.df <- readOGR(bbox.str, bbox.str)
@@ -52,9 +54,9 @@ cont.plot
 ##Plot Cleanup
 ```{r PlotCleanup}
 lake.str <- "GRDC_lakes_join_rivers" # Note that this is not provided in the repo
-flake.df <<- fortify(spTransform(readOGR(lake.str, lake.str), rob.proj))
+flake.df <- fortify(spTransform(readOGR(lake.str, lake.str), rob.proj))
 
-theme.opts <<- list(theme(axis.line = element_blank(),
+theme.opts <- list(theme(axis.line = element_blank(),
       axis.text.x = element_blank(),
       axis.text.y = element_blank(),
       axis.ticks = element_blank(),
@@ -98,12 +100,14 @@ clean.png.data <- png.data[min(r.non.white):max(r.non.white),min(c.non.white):ma
 writePNG(clean.png.data, "cleancontplot.png", dpi=300)
 ```
 
+![World Map 1](cleancontplot.png)
 ```{r SubsettingTheWorld}
 lat.min <- 35
 lat.max <- 75
 long.min <- 10
 long.max <- -75
 bbox.mat <- matrix(c(long.min, long.min, long.max, long.max, lat.min, lat.max, lat.max, lat.min), nrow=4, ncol=2)
+bbox.mat
 bbox.poly <- Polygon(bbox.mat)
 bbox.polys <- Polygons(list(bbox.poly), 1)
 bbox.spolys <- SpatialPolygons(list(bbox.polys))
@@ -128,6 +132,9 @@ subset.plot <- ggplot(fsubset, aes(long, lat, group=group)) +
     geom_polygon()
 subset.plot
 ```
+
 #Resources
-http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
-http://proj4.org/projections/index.html
+calahans@si.edu  
+http://proj4.org/projections/index.html  
+http://www.naturalearthdata.com/  
+http://www.bafg.de/GRDC/EN/Home/homepage_node.html
