@@ -4,10 +4,9 @@ output: html_document
 ---
 ```{r Init, message=FALSE, results="hide"}
 library(rgdal)
-#library(rgeos)
-#library(maptools)
+library(rgeos)
 library(ggplot2)
-#library(png)
+library(png)
 ```
 #Natural Earth Continent Data
 ##Load and Inspect Continent Data
@@ -26,8 +25,7 @@ cont.df@proj4string
 ```{r PlotContinentsLatLong}
 fcont.df <- fortify(cont.df)
 ggplot(fcont.df, aes(long, lat, group=group)) +
-    geom_polygon() +
-    coord_fixed()
+    geom_polygon()
 ```
 
 ##Transform and Plot Continent Data
@@ -38,7 +36,6 @@ frob.cont.df <- fortify(rob.cont.df)
 head(frob.cont.df)
 cont.plot <- ggplot(frob.cont.df, aes(long, lat, group=group)) +
     geom_polygon()
-#    coord_fixed()
 cont.plot
 ```
 ```{r IncludeBBox}
@@ -54,7 +51,7 @@ cont.plot
 
 ##Plot Cleanup
 ```{r PlotCleanup}
-lake.str <- "GRDC_lakes_join_rivers"
+lake.str <- "GRDC_lakes_join_rivers" # Note that this is not provided in the repo
 flake.df <<- fortify(spTransform(readOGR(lake.str, lake.str), rob.proj))
 
 theme.opts <<- list(theme(axis.line = element_blank(),
@@ -73,6 +70,7 @@ theme.opts <<- list(theme(axis.line = element_blank(),
 cont.plot <- ggplot(data=frob.bbox.df, aes(long, lat)) +
     geom_polygon(fill="turquoise1") +
     geom_polygon(data=frob.cont.df, aes(long, lat, group=group), fill="black") +
+    geom_polygon(data=flake.df, aes(long, lat, group=group), fill="turquoise1") + # note: fairly high res
     theme.opts
 cont.plot
 ggsave("contplot.png", plot=cont.plot, width=3.25, height=1.65, dpi=300)
@@ -80,10 +78,47 @@ ggsave("contplot.png", plot=cont.plot, width=3.25, height=1.65, dpi=300)
 
 ![World Map 1](contplot.png)
 ```{r Cleanup2}
-#spTransform(
-#readOGR(paste(cont.dir, bbox.data, sep = "/"), bbox.data), CRS(fig.CRS)))
-#fcont.df <<- fortify(spTransform(readOGR(paste(cont.dir, cont.data, sep = "/"), cont.data), CRS(fig.CRS)))
-#flake.df <<- fortify(spTransform(readOGR(paste(lake.dir, lake.data, sep = "/"), lake.data), CRS(fig.CRS)))
+png.data <- readPNG("contplot.png")
+str(png.data)
+png.data[1,1,]
+png.data[250, 500,]
+sum(png.data[1,,])
+sum(png.data[1,,])/4
+sum(png.data[,1,])
+sum(png.data[,1,])/4
+dosum.r <- function(x) { return(sum(png.data[x,,])) }
+dosum.c <- function(x) { return(sum(png.data[,x,])) }
+r.sums <- lapply(1:495, dosum.r)
+c.sums <- lapply(1:975, dosum.c)
+r.non.white <- which(r.sums != 3900)
+c.non.white <- which(c.sums != 1980)
+clean.png.data <- png.data[min(r.non.white):max(r.non.white),min(c.non.white):max(c.non.white),1:4]
+writePNG(clean.png.data, "cleancontplot.png", dpi=300)
+```
+
+```{r SubsettingTheWorld}
+lat.min <- 35
+lat.max <- 75
+long.min <- 10
+long.max <- -75
+bbox.mat <- matrix(c(long.min, long.min, long.max, long.max, lat.min, lat.max, lat.max, lat.min), nrow=4, ncol=2)
+bbox.poly <- Polygon(bbox.mat)
+bbox.polys <- Polygons(list(bbox.poly), 1)
+bbox.spolys <- SpatialPolygons(list(bbox.polys))
+proj4string(bbox.spolys) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+fbbox.spolys <- fortify(bbox.spolys)
+
+pcont.plot <- ggplot(fcont.df, aes(long, lat, group=group)) +
+    geom_polygon() +
+    geom_polygon(data=fbbox.spolys, aes(long, lat), color="red", fill=NA)
+pcont.plot
+
+subset <- gIntersection(cont.df, bbox.spolys)
+fsubset <- fortify(subset)
+subset.plot <- ggplot(fsubset, aes(long, lat, group=group)) +
+    geom_polygon()
+subset.plot
 ```
 #Resources
 http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
+http://proj4.org/projections/index.html
